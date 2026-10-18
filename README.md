@@ -16,10 +16,14 @@ and re-encoded locally; nothing is uploaded.
 
 ## Run it
 
+[mise](https://mise.jdx.dev) pins the Node.js version (`mise.toml`) and wraps the npm scripts:
+
 ```sh
-npm install
-npm run dev        # http://localhost:5173
-npm run build      # static site in build/, serve it with `npm run preview` or any static host
+mise install       # install the pinned Node.js
+mise run install   # npm ci
+mise run dev       # http://localhost:5173
+mise run build     # static site in build/, serve it with `mise run preview` or any static host
+mise tasks         # list every task
 ```
 
 ## GitHub Pages
@@ -43,8 +47,9 @@ last-read date (marked ↩ in the UI). Ages are measured from the newest timesta
 ## Development
 
 ```sh
-npm test                                   # unit tests
-MIHON_BACKUP=/path/to/file.tachibk npm test  # also checks a real backup round-trips byte for byte
+mise run test                                   # unit tests
+MIHON_BACKUP=/path/to/file.tachibk mise run test  # also checks a real backup round-trips byte for byte
+mise run ci                                     # check, test and build, as the deploy workflow does
 ```
 
 In dev mode, `?backup=<url>` loads a backup from a URL (the server must send CORS headers), which avoids picking the
