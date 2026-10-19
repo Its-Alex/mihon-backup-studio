@@ -27,11 +27,11 @@ and re-encoded locally; nothing is uploaded.
 
 ## Run it
 
-[mise](https://mise.jdx.dev) pins the Node.js version (`mise.toml`) and wraps the npm scripts:
+[mise](https://mise.jdx.dev) pins Node.js and pnpm (`mise.toml`) and wraps the package scripts:
 
 ```sh
-mise install       # install the pinned Node.js
-mise run install   # npm ci
+mise install       # install the pinned Node.js and pnpm
+mise run install   # pnpm install --frozen-lockfile
 mise run dev       # http://localhost:5173
 mise run build     # static site in build/, serve it with `mise run preview` or any static host
 mise tasks         # list every task
