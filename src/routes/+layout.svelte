@@ -17,6 +17,7 @@
 		{ href: resolve('/entries'), label: 'Entries' },
 		{ href: resolve('/categories'), label: 'Categories' },
 		{ href: resolve('/cleanup'), label: 'Cleanup' },
+		{ href: resolve('/migrate'), label: 'Migrate' },
 		{ href: resolve('/trackers'), label: 'Trackers' },
 		{ href: resolve('/settings'), label: 'Settings' },
 		{ href: resolve('/export'), label: 'Export' }
