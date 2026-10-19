@@ -15,8 +15,15 @@ import {
 
 // Field numbers mirror mihon's backup models:
 // https://github.com/mihonapp/mihon/tree/main/app/src/main/java/eu/kanade/tachiyomi/data/backup/models
-const BackupField = { manga: 1, category: 2, source: 101 } as const;
-const MangaField = {
+export const BackupField = {
+	manga: 1,
+	category: 2,
+	source: 101,
+	appPreferences: 104,
+	sourcePreferences: 105,
+	extensionRepos: 106
+} as const;
+export const MangaField = {
 	source: 1,
 	url: 2,
 	title: 3,
@@ -495,6 +502,12 @@ export class Manga {
 
 type LayoutItem = { kind: 'manga' } | { kind: 'category' } | { kind: 'other'; field: Field };
 
+export interface EncodeOptions {
+	includeAppPreferences?: boolean;
+	includeSourcePreferences?: boolean;
+	includeManga?: (manga: Manga) => boolean;
+}
+
 export class BackupDocument {
 	mangas: Manga[] = [];
 	categories: Category[] = [];
@@ -570,17 +583,35 @@ export class BackupDocument {
 		});
 	}
 
-	encode(): Uint8Array {
+	otherFieldValues(number: number): Uint8Array[] {
+		return this.layout.flatMap((item) =>
+			item.kind === 'other' &&
+			item.field.number === number &&
+			item.field.wireType === WireType.LengthDelimited
+				? [item.field.value]
+				: []
+		);
+	}
+
+	encode(options: EncodeOptions = {}): Uint8Array {
+		const includeManga = options.includeManga ?? (() => true);
 		const orderMap = this.categoryOrderMap();
 		const output: Field[] = [];
 		for (const item of this.layout) {
 			if (item.kind === 'manga') {
 				for (const manga of this.mangas)
-					output.push(bytesField(BackupField.manga, manga.encode(orderMap)));
+					if (includeManga(manga)) output.push(bytesField(BackupField.manga, manga.encode(orderMap)));
 			} else if (item.kind === 'category') {
 				for (const category of this.categories)
 					output.push(bytesField(BackupField.category, category.encode()));
 			} else {
+				if (item.field.number === BackupField.appPreferences && options.includeAppPreferences === false)
+					continue;
+				if (
+					item.field.number === BackupField.sourcePreferences &&
+					options.includeSourcePreferences === false
+				)
+					continue;
 				output.push(item.field);
 			}
 		}

@@ -55,7 +55,8 @@ function sampleBackup(): Uint8Array {
 		message(2, [text(1, 'Daily')]),
 		message(2, [text(1, 'Later'), varint(2, 1), varint(3, 1)]),
 		message(101, [text(1, 'Big Source'), varint(2, largeSourceId)]),
-		message(104, [text(1, 'some_preference')])
+		message(104, [text(1, 'some_preference')]),
+		message(105, [text(1, 'source_2'), message(2, [text(1, 'a_source_preference')])])
 	]);
 }
 
@@ -124,6 +125,22 @@ describe('BackupDocument', () => {
 			}
 		]);
 		expect(document.mangas[1].tracking).toEqual([]);
+	});
+
+	it('strips preferences and filters entries when asked', () => {
+		const document = BackupDocument.decode(sampleBackup());
+		const trimmed = BackupDocument.decode(
+			document.encode({
+				includeAppPreferences: false,
+				includeSourcePreferences: false,
+				includeManga: (manga) => manga.title !== 'Beta'
+			})
+		);
+		expect(trimmed.mangas.map((manga) => manga.title)).toEqual(['Alpha']);
+		expect(trimmed.otherFieldValues(104)).toEqual([]);
+		expect(trimmed.otherFieldValues(105)).toEqual([]);
+		expect(trimmed.categories.length).toBe(2);
+		expect(trimmed.sourceNames.get(largeSourceId.toString())).toBe('Big Source');
 	});
 
 	it('writes new entries and categories', () => {

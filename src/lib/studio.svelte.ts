@@ -1,6 +1,12 @@
 import { analyze, defaultSettings, type AnalysisSettings } from './backup/analysis';
 import { gzip, readBackupBytes } from './backup/gzip';
-import { BackupDocument, Category, Manga, type NewMangaInput } from './backup/model';
+import {
+	BackupDocument,
+	Category,
+	Manga,
+	type EncodeOptions,
+	type NewMangaInput
+} from './backup/model';
 
 const settingsKey = 'mihon-backup-studio:settings';
 const coversKey = 'mihon-backup-studio:covers';
@@ -246,9 +252,9 @@ class Studio {
 		return uid;
 	}
 
-	async exportBackup(): Promise<Blob> {
+	async exportBackup(options: EncodeOptions = {}): Promise<Blob> {
 		if (!this.document) throw new Error('No backup loaded');
-		return new Blob([(await gzip(this.document.encode())) as BlobPart], {
+		return new Blob([(await gzip(this.document.encode(options))) as BlobPart], {
 			type: 'application/octet-stream'
 		});
 	}
