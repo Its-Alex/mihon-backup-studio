@@ -3,16 +3,27 @@
 Inspect, clean up and edit a [Mihon](https://mihon.app) backup (`.tachibk`) in the browser. The file is decoded, edited
 and re-encoded locally; nothing is uploaded.
 
-- **Dashboard**: library size, categories broken down by reading state, last-read activity, time spent reading, and
-  which sources still update.
+- **Dashboard**: library size, categories broken down by reading state, last-read activity, time spent reading, top
+  genres, publication statuses, and which sources still update.
+- **Activity**: a heatmap of reading days per year, streaks, hours read per month and the most-read titles, from the
+  reading history in the backup.
 - **Library map**: every library entry grouped by category, then by state (active, caught up, behind, not started,
   frozen source, duplicate, missing extension).
-- **Entries**: search, filter and bulk-edit: move between categories, remove from or add to the library, delete. Each
-  entry opens a panel to edit details, categories and read chapters, and to clear its history.
+- **Entries**: search, filter (category, group, source, genre, status) and bulk-edit: move between categories, remove
+  from or add to the library, delete. Each entry opens a panel to edit details, categories and read chapters, and to
+  clear its history. Covers can be shown (loaded from each source's website, off by default).
 - **Categories**: create, rename, reorder, delete (optionally moving their entries elsewhere).
 - **Cleanup**: suggested batches (duplicates, missing extensions, frozen sources, abandoned series, empty copies) to
   review and apply.
-- **Export**: download the edited backup. Every field the tool does not edit is copied byte for byte.
+- **Migrate**: library entries stuck on a frozen source or missing extension, with the copies the backup already holds
+  on healthy sources.
+- **Trackers**: tracker bindings per entry, a MyAnimeList import XML built from the MAL-bound entries, and a CSV of the
+  untracked library.
+- **Preferences**: the app settings, per-source settings and extension repositories the backup carries, read-only.
+- **Size**: what the backup's bytes are spent on — entries vs settings, chapters vs history vs details, the largest
+  entries, and how much each cleanup batch would free if deleted.
+- **Export**: download the edited backup. Every field the tool does not edit is copied byte for byte. Optionally strip
+  app or source settings, or keep only selected categories.
 
 ## Run it
 
