@@ -44,6 +44,12 @@ Migrating an entry to another source copies its read chapters but leaves its his
 outside the library. The analysis matches entries by normalized title and uses the newest history of any copy as the
 last-read date (marked ↩ in the UI). Ages are measured from the newest timestamp in the backup, not from today.
 
+## How entries are grouped
+
+Each entry lands in exactly one group — active, caught up, behind, not started, duplicate, missing extension, or outside
+the library — and frozen sources split some of them further. The rules, their evaluation order and every threshold are
+documented in [docs/groups.md](docs/groups.md).
+
 ## Development
 
 ```sh
