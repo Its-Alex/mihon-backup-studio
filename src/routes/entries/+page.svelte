@@ -3,7 +3,8 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import NewEntryDialog from '#lib/components/NewEntryDialog.svelte';
 	import { formatAge, groups, type EntryInsight, type Group } from '#lib/backup/analysis.ts';
-	import { DEFAULT_CATEGORY } from '#lib/backup/views.ts';
+	import { MangaStatus } from '#lib/backup/model.ts';
+	import { DEFAULT_CATEGORY, genreStats, hasGenre } from '#lib/backup/views.ts';
 	import { studio } from '#lib/studio.svelte.ts';
 
 	const pageSize = 100;
@@ -21,6 +22,8 @@
 	let category = $state('all');
 	let group = $state('all');
 	let source = $state('all');
+	let genre = $state('all');
+	let status = $state('all');
 	let sortBy = $state('lastRead');
 	let pageIndex = $state(0);
 	let targetCategory = $state('');
@@ -34,6 +37,8 @@
 		category = params.get('category') ?? 'all';
 		group = params.get('group') ?? 'all';
 		source = params.get('source') ?? 'all';
+		genre = params.get('genre') ?? 'all';
+		status = params.get('status') ?? 'all';
 		selected.clear();
 	});
 
@@ -43,6 +48,7 @@
 		return [...studio.document!.categories];
 	});
 	const knownCategoryUids = $derived(new Set(categories.map((existing) => existing.uid)));
+	const genres = $derived(genreStats(analysis.entries));
 
 	const filtered = $derived.by(() => {
 		const needle = query.trim().toLowerCase();
@@ -52,6 +58,8 @@
 				if (library === 'out' && entry.manga.favorite) return false;
 				if (group !== 'all' && entry.group !== group) return false;
 				if (source !== 'all' && entry.manga.sourceKey !== source) return false;
+				if (genre !== 'all' && !hasGenre(entry.manga, genre)) return false;
+				if (status !== 'all' && entry.manga.status !== Number(status)) return false;
 				if (category === DEFAULT_CATEGORY) {
 					if (entry.manga.categoryUids.some((uid) => knownCategoryUids.has(uid))) return false;
 				} else if (category !== 'all' && !entry.manga.categoryUids.includes(category)) return false;
@@ -121,6 +129,18 @@
 			<option value="all">All sources</option>
 			{#each analysis.sources as option (option.key)}
 				<option value={option.key}>{option.name} ({option.entryCount})</option>
+			{/each}
+		</select>
+		<select bind:value={genre} aria-label="Genre">
+			<option value="all">All genres</option>
+			{#each genres as option (option.key)}
+				<option value={option.key}>{option.label} ({option.count})</option>
+			{/each}
+		</select>
+		<select bind:value={status} aria-label="Publication status">
+			<option value="all">All statuses</option>
+			{#each Object.entries(MangaStatus) as [value, label] (value)}
+				<option {value}>{label}</option>
 			{/each}
 		</select>
 		<select bind:value={sortBy} aria-label="Sort">

@@ -3,7 +3,8 @@
 	import { resolve } from '$app/paths';
 	import StackedBar from '#lib/components/StackedBar.svelte';
 	import { DAY, formatAge, groups } from '#lib/backup/analysis.ts';
-	import { groupSegments, libraryByCategory, libraryGroups } from '#lib/backup/views.ts';
+	import { MangaStatus } from '#lib/backup/model.ts';
+	import { genreStats, groupSegments, libraryByCategory, libraryGroups } from '#lib/backup/views.ts';
 	import { studio } from '#lib/studio.svelte.ts';
 
 	const analysis = $derived(studio.analysis!);
@@ -67,6 +68,18 @@
 			.sort((a, b) => b.duration - a.duration)
 			.slice(0, 10);
 	});
+
+	const genreTop = $derived(genreStats(library).slice(0, 20));
+	const statusCounts = $derived(
+		Object.entries(MangaStatus)
+			.map(([value, label]) => ({
+				value,
+				label,
+				count: library.filter((entry) => entry.manga.status === Number(value)).length
+			}))
+			.filter((item) => item.count > 0)
+			.sort((a, b) => b.count - a.count)
+	);
 
 	const openEntries = (params: Record<string, string>) =>
 		goto(`${resolve('/entries')}?${new URLSearchParams(params)}`);
@@ -146,6 +159,36 @@
 					{/each}
 				</tbody>
 			</table>
+		</section>
+	</div>
+
+	<div class="two">
+		<section class="panel stack">
+			<h2>Top genres (library)</h2>
+			<div class="bars">
+				{#each genreTop as item (item.key)}
+					<button class="link bar-row" onclick={() => openEntries({ genre: item.key, library: 'in' })}>
+						<span class="bar-label">{item.label}</span>
+						<span class="bar-track"><span class="bar" style:width="{(item.count / (genreTop[0]?.count || 1)) * 100}%"></span></span>
+						<span class="muted small">{item.count}</span>
+					</button>
+				{:else}
+					<p class="muted small">No genre information in this backup.</p>
+				{/each}
+			</div>
+		</section>
+
+		<section class="panel stack">
+			<h2>Publication status (library)</h2>
+			<div class="bars">
+				{#each statusCounts as item (item.value)}
+					<button class="link bar-row" onclick={() => openEntries({ status: item.value, library: 'in' })}>
+						<span class="bar-label">{item.label}</span>
+						<span class="bar-track"><span class="bar" style:width="{(item.count / (statusCounts[0]?.count || 1)) * 100}%"></span></span>
+						<span class="muted small">{item.count}</span>
+					</button>
+				{/each}
+			</div>
 		</section>
 	</div>
 
@@ -233,5 +276,40 @@
 	.axis {
 		font-size: 9px;
 		fill: var(--muted);
+	}
+
+	.bars {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.bar-row {
+		display: grid;
+		grid-template-columns: 150px 1fr 36px;
+		gap: 10px;
+		align-items: center;
+		color: var(--text);
+	}
+
+	.bar-label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 12px;
+	}
+
+	.bar-track {
+		background: var(--panel-2);
+		border-radius: 4px;
+		height: 10px;
+		overflow: hidden;
+	}
+
+	.bar {
+		display: block;
+		height: 100%;
+		background: var(--accent);
+		border-radius: 4px;
 	}
 </style>
