@@ -24,17 +24,22 @@
 	const chosenAction = new SvelteMap<string, CleanupAction>();
 	const chosenCategory = new SvelteMap<string, string>();
 	const expanded = new SvelteSet<string>();
+	// Moving to a category does not change an entry's group, so the suggestion would keep listing it; applied entries are hidden for this session instead.
+	const handled = new SvelteSet<string>();
+	const lastApplied = new SvelteMap<string, string>();
 	const defaultTarget = $derived(findCategory(/read|finish|done|complete/i) || categories[0]?.uid || '');
 
 	const key = (suggestion: Suggestion, uid: string) => `${suggestion.id}:${uid}`;
 	const isSelected = (suggestion: Suggestion, uid: string) => suggestion.selectedByDefault !== toggled.has(key(suggestion, uid));
+	const visibleEntries = (suggestion: Suggestion) =>
+		suggestion.entries.filter((entry) => !handled.has(key(suggestion, entry.manga.uid)));
 	const selectedUids = (suggestion: Suggestion) =>
-		suggestion.entries.filter((entry) => isSelected(suggestion, entry.manga.uid)).map((entry) => entry.manga.uid);
+		visibleEntries(suggestion).filter((entry) => isSelected(suggestion, entry.manga.uid)).map((entry) => entry.manga.uid);
 	const actionOf = (suggestion: Suggestion) => chosenAction.get(suggestion.id) ?? suggestion.actions[0];
 	const targetOf = (suggestion: Suggestion) => chosenCategory.get(suggestion.id) ?? defaultTarget;
 
 	function setAll(suggestion: Suggestion, selected: boolean) {
-		for (const entry of suggestion.entries) {
+		for (const entry of visibleEntries(suggestion)) {
 			const id = key(suggestion, entry.manga.uid);
 			if (selected === suggestion.selectedByDefault) toggled.delete(id);
 			else toggled.add(id);
@@ -46,9 +51,18 @@
 		if (!uids.length) return;
 		const action = actionOf(suggestion);
 		if (action === 'deleteFromBackup' && !confirm(`Delete ${uids.length} entries from the backup, with their chapters and history?`)) return;
-		if (action === 'removeFromLibrary') studio.setInLibrary(uids, false);
-		else if (action === 'deleteFromBackup') studio.deleteEntries(uids);
-		else studio.setCategories(uids, [targetOf(suggestion)], `${suggestion.title}: moved ${uids.length} entries to “${studio.categoryName(targetOf(suggestion))}”`);
+		if (action === 'removeFromLibrary') {
+			studio.setInLibrary(uids, false);
+			lastApplied.set(suggestion.id, `Removed ${uids.length} entries from the library.`);
+		} else if (action === 'deleteFromBackup') {
+			studio.deleteEntries(uids);
+			lastApplied.set(suggestion.id, `Deleted ${uids.length} entries from the backup.`);
+		} else {
+			const targetName = studio.categoryName(targetOf(suggestion));
+			studio.setCategories(uids, [targetOf(suggestion)], `${suggestion.title}: moved ${uids.length} entries to “${targetName}”`);
+			lastApplied.set(suggestion.id, `Moved ${uids.length} entries to “${targetName}”.`);
+		}
+		for (const uid of uids) handled.add(key(suggestion, uid));
 		for (const id of [...toggled]) if (id.startsWith(`${suggestion.id}:`)) toggled.delete(id);
 	}
 </script>
@@ -74,11 +88,12 @@
 	</div>
 
 	{#each suggestions as suggestion (suggestion.id)}
+		{@const entries = visibleEntries(suggestion)}
 		{@const selectedCount = selectedUids(suggestion).length}
 		{@const action = actionOf(suggestion)}
 		<section class="panel stack">
 			<div class="row" style="justify-content: space-between">
-				<h2>{suggestion.title} <span class="muted">· {suggestion.entries.length}</span></h2>
+				<h2>{suggestion.title} <span class="muted">· {entries.length}</span></h2>
 				<button class="link small" onclick={() => (expanded.has(suggestion.id) ? expanded.delete(suggestion.id) : expanded.add(suggestion.id))}>
 					{expanded.has(suggestion.id) ? 'Hide entries' : 'Review entries'}
 				</button>
@@ -91,7 +106,7 @@
 					<button class="small" onclick={() => setAll(suggestion, false)}>Select none</button>
 				</div>
 				<div class="entries">
-					{#each suggestion.entries as entry (entry.manga.uid)}
+					{#each entries as entry (entry.manga.uid)}
 						<label class="entry">
 							<input
 								type="checkbox"
@@ -136,6 +151,9 @@
 				>
 					Apply to {selectedCount} selected
 				</button>
+				{#if lastApplied.has(suggestion.id)}
+					<span class="done small">✓ {lastApplied.get(suggestion.id)}</span>
+				{/if}
 			</div>
 		</section>
 	{:else}
@@ -171,5 +189,9 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.done {
+		color: var(--c-green);
 	}
 </style>
