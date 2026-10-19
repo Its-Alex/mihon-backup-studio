@@ -42,7 +42,9 @@ when restoring into an empty app (clear Mihon's storage or reinstall, then resto
 
 Migrating an entry to another source copies its read chapters but leaves its history on the old entry, which then sits
 outside the library. The analysis matches entries by normalized title and uses the newest history of any copy as the
-last-read date (marked ↩ in the UI). Ages are measured from the newest timestamp in the backup, not from today.
+last-read date (marked ↩ in the UI). Ages are measured from the newest timestamp in the backup, not from today. The
+reasoning and its trade-offs are in
+[ADR 1](docs/adr/0001-cross-source-reading-state.md).
 
 ## How entries are grouped
 
