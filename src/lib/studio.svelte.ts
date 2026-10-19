@@ -3,6 +3,7 @@ import { gzip, readBackupBytes } from './backup/gzip';
 import { BackupDocument, Category, Manga, type NewMangaInput } from './backup/model';
 
 const settingsKey = 'mihon-backup-studio:settings';
+const coversKey = 'mihon-backup-studio:covers';
 
 function loadSettings(): AnalysisSettings {
 	try {
@@ -32,6 +33,7 @@ class Studio {
 	changes = $state<string[]>([]);
 	openEntryUid = $state<string | null>(null);
 	settings = $state<AnalysisSettings>(loadSettings());
+	showCovers = $state(globalThis.localStorage?.getItem(coversKey) === 'on');
 	private originalBytes: Uint8Array | null = null;
 
 	analysis = $derived.by(() => {
@@ -77,6 +79,11 @@ class Studio {
 	saveSettings() {
 		localStorage.setItem(settingsKey, JSON.stringify($state.snapshot(this.settings)));
 		this.version++;
+	}
+
+	setShowCovers(show: boolean) {
+		this.showCovers = show;
+		localStorage.setItem(coversKey, show ? 'on' : 'off');
 	}
 
 	private mutate(description: string, apply: (document: BackupDocument) => void) {

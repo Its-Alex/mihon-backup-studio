@@ -104,21 +104,34 @@
 				<span class="tag">{insight.sourceName}</span>
 				{#if manga.trackingCount}<span class="tag">{manga.trackingCount} tracker(s)</span>{/if}
 			</div>
-			<dl class="facts">
-				<dt>Read</dt>
-				<dd>{insight.readCount} / {insight.chapterCount} chapters</dd>
-				<dt>Last read</dt>
-				<dd>
-					{formatAge(insight.lastRead, referenceTime)}
-					{#if insight.lastReadRecovered}<span class="muted small">(from another copy)</span>{/if}
-				</dd>
-				<dt>Newest chapter</dt>
-				<dd>{formatAge(insight.lastUpload, referenceTime)}</dd>
-				<dt>Added</dt>
-				<dd>{manga.dateAdded ? new Date(manga.dateAdded).toLocaleDateString() : 'unknown'}</dd>
-				<dt>URL</dt>
-				<dd class="small break">{manga.url}</dd>
-			</dl>
+			<div class="head">
+				{#if studio.showCovers && manga.thumbnailUrl}
+					<img
+						class="cover"
+						src={manga.thumbnailUrl}
+						alt=""
+						loading="lazy"
+						referrerpolicy="no-referrer"
+						onerror={(event) => ((event.currentTarget as HTMLImageElement).style.display = 'none')}
+					/>
+				{/if}
+				<dl class="facts">
+					<dt>Read</dt>
+					<dd>{insight.readCount} / {insight.chapterCount} chapters</dd>
+					<dt>Last read</dt>
+					<dd>
+						{formatAge(insight.lastRead, referenceTime)}
+						{#if insight.lastReadRecovered}<span class="muted small">(from another copy)</span>{/if}
+					</dd>
+					<dt>Newest chapter</dt>
+					<dd>{formatAge(insight.lastUpload, referenceTime)}</dd>
+					<dt>Added</dt>
+					<dd>{manga.dateAdded ? new Date(manga.dateAdded).toLocaleDateString() : 'unknown'}</dd>
+					<dt>URL</dt>
+					<dd class="small break">{manga.url}</dd>
+				</dl>
+			</div>
+
 
 			<section class="stack">
 				<h3>Library</h3>
@@ -283,11 +296,26 @@
 		font-size: 14px;
 	}
 
+	.head {
+		display: flex;
+		gap: 14px;
+		align-items: flex-start;
+	}
+
+	.cover {
+		width: 92px;
+		border-radius: 6px;
+		background: var(--panel-2);
+		flex: none;
+	}
+
 	.facts {
 		display: grid;
 		grid-template-columns: 120px 1fr;
 		gap: 4px 12px;
 		margin: 0;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.facts dt {

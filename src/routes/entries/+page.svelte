@@ -128,6 +128,10 @@
 				<option value={key}>Sort: {sorter.label}</option>
 			{/each}
 		</select>
+		<label class="row small" title="Loads cover images from each entry's source website">
+			<input type="checkbox" checked={studio.showCovers} onchange={(event) => studio.setShowCovers(event.currentTarget.checked)} />
+			Covers
+		</label>
 	</div>
 
 	<div class="panel row bulk" class:active={selected.size > 0}>
@@ -191,7 +195,19 @@
 							/>
 						</td>
 						<td class="title">
-							<button class="link" onclick={() => (studio.openEntryUid = entry.manga.uid)}>{entry.manga.title || '(untitled)'}</button>
+							<span class="title-cell">
+								{#if studio.showCovers && entry.manga.thumbnailUrl}
+									<img
+										class="cover"
+										src={entry.manga.thumbnailUrl}
+										alt=""
+										loading="lazy"
+										referrerpolicy="no-referrer"
+										onerror={(event) => ((event.currentTarget as HTMLImageElement).style.visibility = 'hidden')}
+									/>
+								{/if}
+								<button class="link" onclick={() => (studio.openEntryUid = entry.manga.uid)}>{entry.manga.title || '(untitled)'}</button>
+							</span>
 						</td>
 						<td class="small">{categoryNames(entry)}</td>
 						<td>
@@ -248,9 +264,27 @@
 
 	.title {
 		max-width: 360px;
+	}
+
+	.title-cell {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.title-cell .link {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.cover {
+		width: 26px;
+		height: 36px;
+		object-fit: cover;
+		border-radius: 4px;
+		background: var(--panel-2);
+		flex: none;
 	}
 
 	.nowrap {
