@@ -12,6 +12,7 @@
 
 	const navigation = [
 		{ href: resolve('/'), label: 'Dashboard' },
+		{ href: resolve('/activity'), label: 'Activity' },
 		{ href: resolve('/map'), label: 'Library map' },
 		{ href: resolve('/entries'), label: 'Entries' },
 		{ href: resolve('/categories'), label: 'Categories' },
