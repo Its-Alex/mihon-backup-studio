@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { formatAge, groups } from '#lib/backup/analysis.ts';
 	import { MangaStatus } from '#lib/backup/model.ts';
+	import { trackerName, trackingProgress } from '#lib/backup/trackers.ts';
 	import { studio } from '#lib/studio.svelte.ts';
 
 	const chapterPreview = 60;
@@ -102,7 +103,6 @@
 			<div class="row">
 				<span class="tag"><span class="dot" style:background={groups[insight.group].color}></span>{groups[insight.group].label}</span>
 				<span class="tag">{insight.sourceName}</span>
-				{#if manga.trackingCount}<span class="tag">{manga.trackingCount} tracker(s)</span>{/if}
 			</div>
 			<div class="head">
 				{#if studio.showCovers && manga.thumbnailUrl}
@@ -131,7 +131,23 @@
 					<dd class="small break">{manga.url}</dd>
 				</dl>
 			</div>
-
+			{#if manga.tracking.length}
+				<section class="stack">
+					<h3>Trackers</h3>
+					{#each manga.tracking as tracking, index (index)}
+						<div class="row small">
+							<span class="tag">{trackerName(tracking.syncId)}</span>
+							<span>{trackingProgress(tracking)} chapters</span>
+							{#if tracking.score}<span>score {tracking.score}</span>{/if}
+							{#if tracking.trackingUrl}
+								<a href={tracking.trackingUrl} target="_blank" rel="noreferrer">{tracking.title || tracking.trackingUrl}</a>
+							{:else if tracking.title}
+								<span class="muted">{tracking.title}</span>
+							{/if}
+						</div>
+					{/each}
+				</section>
+			{/if}
 
 			<section class="stack">
 				<h3>Library</h3>

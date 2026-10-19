@@ -47,6 +47,18 @@ const ChapterField = {
 } as const;
 const CategoryField = { name: 1, order: 2, id: 3, flags: 100 } as const;
 const HistoryField = { url: 1, lastRead: 2, readDuration: 3 } as const;
+const TrackingField = {
+	syncId: 1,
+	trackingUrl: 4,
+	title: 5,
+	lastChapterRead: 6,
+	totalChapters: 7,
+	score: 8,
+	status: 9,
+	startedReadingDate: 10,
+	finishedReadingDate: 11,
+	mediaId: 100
+} as const;
 
 export const MangaStatus = {
 	0: 'Unknown',
@@ -181,6 +193,70 @@ function decodeHistory(bytes: Uint8Array): HistoryEntry {
 	return entry;
 }
 
+export interface Tracking {
+	syncId: number;
+	trackingUrl: string;
+	title: string;
+	lastChapterRead: number;
+	totalChapters: number;
+	score: number;
+	status: number;
+	startedReadingDate: number;
+	finishedReadingDate: number;
+	mediaId: number;
+}
+
+function decodeTracking(bytes: Uint8Array): Tracking {
+	const tracking: Tracking = {
+		syncId: 0,
+		trackingUrl: '',
+		title: '',
+		lastChapterRead: 0,
+		totalChapters: 0,
+		score: 0,
+		status: 0,
+		startedReadingDate: 0,
+		finishedReadingDate: 0,
+		mediaId: 0
+	};
+	for (const field of decodeFields(bytes)) {
+		switch (field.number) {
+			case TrackingField.syncId:
+				tracking.syncId = varintToNumber(field.value as VarintValue);
+				break;
+			case TrackingField.trackingUrl:
+				tracking.trackingUrl = decodeString(field.value as Uint8Array);
+				break;
+			case TrackingField.title:
+				tracking.title = decodeString(field.value as Uint8Array);
+				break;
+			case TrackingField.lastChapterRead:
+				if (field.wireType === WireType.Fixed32)
+					tracking.lastChapterRead = decodeFloat32(field.value);
+				break;
+			case TrackingField.totalChapters:
+				tracking.totalChapters = varintToNumber(field.value as VarintValue);
+				break;
+			case TrackingField.score:
+				if (field.wireType === WireType.Fixed32) tracking.score = decodeFloat32(field.value);
+				break;
+			case TrackingField.status:
+				tracking.status = varintToNumber(field.value as VarintValue);
+				break;
+			case TrackingField.startedReadingDate:
+				tracking.startedReadingDate = varintToNumber(field.value as VarintValue);
+				break;
+			case TrackingField.finishedReadingDate:
+				tracking.finishedReadingDate = varintToNumber(field.value as VarintValue);
+				break;
+			case TrackingField.mediaId:
+				tracking.mediaId = varintToNumber(field.value as VarintValue);
+				break;
+		}
+	}
+	return tracking;
+}
+
 export class Category {
 	uid = newUid('category-');
 	name = '';
@@ -242,7 +318,7 @@ export class Manga {
 	dateAdded = 0;
 	favorite = true;
 	notes = '';
-	trackingCount = 0;
+	tracking: Tracking[] = [];
 	chapters: Chapter[] = [];
 	history: HistoryEntry[] = [];
 	originalCategoryOrders: number[] = [];
@@ -298,7 +374,7 @@ export class Manga {
 					}
 					break;
 				case MangaField.tracking:
-					this.trackingCount++;
+					this.tracking.push(decodeTracking(raw as Uint8Array));
 					break;
 				case MangaField.favorite:
 					this.favorite = raw !== 0;

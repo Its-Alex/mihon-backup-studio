@@ -21,6 +21,11 @@ const message = (number: number, fields: Field[]): Field => ({
 	wireType: WireType.LengthDelimited,
 	value: encodeFields(fields)
 });
+const float32 = (number: number, value: number): Field => {
+	const bytes = new Uint8Array(4);
+	new DataView(bytes.buffer).setFloat32(0, value, true);
+	return { number, wireType: WireType.Fixed32, value: bytes };
+};
 
 const largeSourceId = 6247824327199706550n;
 
@@ -33,6 +38,16 @@ function sampleBackup(): Uint8Array {
 			message(16, [text(1, '/a/1'), text(2, 'Chapter 1'), varint(4, 1)]),
 			message(16, [text(1, '/a/2'), text(2, 'Chapter 2')]),
 			varint(17, 0),
+			message(18, [
+				varint(1, 1),
+				text(4, 'https://myanimelist.net/manga/42'),
+				text(5, 'Alpha'),
+				float32(6, 12),
+				varint(7, 100),
+				float32(8, 10),
+				varint(9, 1),
+				varint(100, 42)
+			]),
 			message(104, [text(1, '/a/1'), varint(2, 1_700_000_000_000)]),
 			varint(999, 42)
 		]),
@@ -90,6 +105,25 @@ describe('BackupDocument', () => {
 		expect(
 			decodeFields(reloaded.mangas[0].bytes!).find((field) => field.number === 999)?.value
 		).toBe(42);
+	});
+
+	it('decodes tracker bindings', () => {
+		const document = BackupDocument.decode(sampleBackup());
+		expect(document.mangas[0].tracking).toEqual([
+			{
+				syncId: 1,
+				trackingUrl: 'https://myanimelist.net/manga/42',
+				title: 'Alpha',
+				lastChapterRead: 12,
+				totalChapters: 100,
+				score: 10,
+				status: 1,
+				startedReadingDate: 0,
+				finishedReadingDate: 0,
+				mediaId: 42
+			}
+		]);
+		expect(document.mangas[1].tracking).toEqual([]);
 	});
 
 	it('writes new entries and categories', () => {
