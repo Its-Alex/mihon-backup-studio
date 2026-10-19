@@ -69,7 +69,7 @@ export function decodeFields(bytes: Uint8Array): Field[] {
 	return fields;
 }
 
-function varintByteLength(value: VarintValue): number {
+export function varintByteLength(value: VarintValue): number {
 	if (typeof value === 'number' && value >= 0 && value < 2 ** 31) {
 		let length = 1;
 		while (value >= 0x80) {

@@ -20,6 +20,7 @@
 		{ href: resolve('/migrate'), label: 'Migrate' },
 		{ href: resolve('/trackers'), label: 'Trackers' },
 		{ href: resolve('/preferences'), label: 'Preferences' },
+		{ href: resolve('/size'), label: 'Size' },
 		{ href: resolve('/settings'), label: 'Settings' },
 		{ href: resolve('/export'), label: 'Export' }
 	];
