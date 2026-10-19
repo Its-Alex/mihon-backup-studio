@@ -145,7 +145,6 @@ button.link {
 	flex-direction: column;
 	gap: 16px;
 	padding: 24px;
-	max-width: 1200px;
 }
 
 .dot {
